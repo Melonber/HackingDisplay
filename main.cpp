@@ -173,22 +173,53 @@ void show_wifi() {
   if (n == 0) {
     display.println(F("No networks found")); // Если сетей нет
   } else {
-    display.print(F("Networks found: "));
-    display.println(n); // Выводим количество найденных сетей
+    int currentNetwork = 0; // Текущая отображаемая сеть
+    const int maxDisplayNetworks = 4; // Максимальное количество сетей на экране за раз
 
-    // Выводим список сетей
-    for (int i = 0; i < n; i++) {
-      display.print(WiFi.SSID(i)); // Имя сети (SSID)
-      display.print(F(" (")); // Открывающая скобка
-      display.print(WiFi.RSSI(i)); // Уровень сигнала
-      display.print(F(" dBm)")); // Закрывающая скобка
-      display.println(); // Переход на следующую строку
-      delay(100); // Небольшая задержка для удобства
+    while (true) {
+      display.clearDisplay(); // Очистка экрана перед обновлением
+
+      display.setCursor(0, 0);
+      display.print(F("Networks found: "));
+      display.println(n); // Выводим количество найденных сетей
+      
+      // Отображаем список сетей, начиная с текущей
+      for (int i = currentNetwork; i < min(currentNetwork + maxDisplayNetworks, n); i++) {
+        display.print(WiFi.SSID(i)); // Имя сети (SSID)
+        display.print(F(" ("));
+        display.print(WiFi.RSSI(i)); // Уровень сигнала
+        display.print(F(" dBm)"));
+        display.println();
+      }
+
+      display.display(); // Обновляем экран
+
+      // Обрабатываем кнопки
+      if (digitalRead(DOWN_BUTTON) == LOW) {
+        if (currentNetwork < n - maxDisplayNetworks) {
+          currentNetwork++; // Прокрутка вниз, если не достигнут конец списка
+        }
+        delay(200); // Задержка для предотвращения дребезга кнопок
+      }
+
+      if (digitalRead(UP_BUTTON) == LOW) {
+        if (currentNetwork > 0) {
+          currentNetwork--; // Прокрутка вверх, если не достигнуто начало списка
+        }
+        delay(200); // Задержка для предотвращения дребезга кнопок
+      }
+
+      // Выход из списка сетей по нажатию на MIDDLE_BUTTON и возврат в главное меню
+      if (digitalRead(MIDDLE_BUTTON) == LOW) {
+        displayMenu(); // Возвращаемся в главное меню
+        break; // Прерываем цикл и возвращаемся в главное меню
+      }
     }
   }
 
   display.display(); // Обновляем экран после вывода всех сетей
 }
+
 
 void displayLoading() {
   int n = -1; // Инициализируем переменную для хранения результата сканирования
